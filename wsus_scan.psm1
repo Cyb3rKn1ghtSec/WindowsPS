@@ -36,14 +36,17 @@ function Invoke-UpdateDownload([string[]]$KBArticleID){
     $UpdateSession = New-Object -ComObject Microsoft.Update.Session
     $UpdateServiceManager = New-Object -ComObject Microsoft.Update.ServiceManager
     $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
-    $Updates =  $UpdateSearcher.search("UpdateID=$($UpdateID)")
-    $updateKB = $Updates[0].KBArticleIDs
-    $downloadUrl = $Updates[0].BundledUpdates.item(0).downloadcontents | Where-Object {$_.DownloadUrl -like "*$($updateKB)*.msu"}
 
-    if(-not (Test-Path -Path $PSScriptRoot\Downloads\$updateKB)){
-        New-Item -Type Directory -Path $PSScriptRoot\Downloads\$updateKB
+    foreach($item in $requestedUpdates){
+        #$UpdateSearcher.search("UpdateID=$($item.UpdateId)")
+        $updateKB = $item.KBArticleIDs
+        $downloadUrl = $item.DownloadUrl
+
+        if(-not (Test-Path -Path $PSScriptRoot\Downloads\$updateKB)){
+            New-Item -Type Directory -Path $PSScriptRoot\Downloads\$updateKB
+        }
+
+        Invoke-WebRequest -Uri $downloadUrl -OutFile "$PSScriptRoot\Downloads\$updateKB"
     }
-
-    Invoke-WebRequest -Uri $downloadUrl -OutFile "$PSScriptRoot\Downloads\$updateKB"
 }
 
